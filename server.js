@@ -30,6 +30,7 @@ try {
 }
 
 const PORT = Number(process.env.PORT) || 8000;
+const HOST = process.env.HOST || '0.0.0.0';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '0987890987';
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const database = new DatabaseSync(DATABASE_FILE);
@@ -893,8 +894,8 @@ const server = http.createServer(async (request, response) => {
     });
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-    console.log(`OM STORE running at http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+    console.log(`OM STORE running at http://${HOST}:${PORT}`);
     if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
         console.log('Telegram notifications are disabled until TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are configured.');
     }
