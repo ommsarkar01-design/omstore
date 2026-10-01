@@ -31,7 +31,14 @@ try {
 
 const PORT = Number(process.env.PORT) || 8000;
 const HOST = process.env.HOST || '0.0.0.0';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '0987890987';
+
+// --- Admin password: must be set in production (Railway env vars) ---
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD || ADMIN_PASSWORD.startsWith('replace_with_')) {
+    console.error('FATAL: ADMIN_PASSWORD is not set. Set it in Railway Variables (or .env locally) and restart.');
+    process.exit(1);
+}
+
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const database = new DatabaseSync(DATABASE_FILE);
 database.exec(`
