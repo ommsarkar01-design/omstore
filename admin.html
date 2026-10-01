@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="OM STORE demo inventory dashboard.">
+    <title>Admin Dashboard | OM STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+    <header class="main-header">
+        <a href="index.html" class="logo-area" aria-label="OM STORE home"><span class="logo-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span><span class="logo-text"><h1>OM STORE</h1><span>Free Fire ID marketplace</span></span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="index.html"><i class="fa-solid fa-store" aria-hidden="true"></i><span>Store</span></a>
+            <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>About</span></a>
+            <a href="contact.html"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+            <a href="services.html"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>Services</span></a>
+            <a href="help.html"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Help</span></a>
+            <a href="admin.html" class="active" aria-current="page"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Admin</span></a>
+        </nav>
+        <div class="header-actions"><div class="avatar-badge"><i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>OM Admin</span></div><a href="index.html" class="btn-logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>Log out</a></div>
+    </header>
+    <main>
+        <section class="admin-header">
+            <h2><i class="fa-solid fa-sliders" aria-hidden="true"></i>Admin dashboard</h2>
+            <div class="admin-actions"><button type="button" class="btn-outline" id="refreshAdminBtn"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>Refresh</button><button type="button" class="btn-primary" id="addAccountBtn"><i class="fa-solid fa-plus" aria-hidden="true"></i>Add ID</button></div>
+        </section>
+        <section class="stats-grid" id="adminStatsGrid" aria-label="Inventory summary"></section>
+        <section class="admin-table-wrapper" aria-label="Account inventory">
+            <table>
+                <thead><tr><th scope="col">ID</th><th scope="col">Title</th><th scope="col">Level / Rank</th><th scope="col">Price</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+                <tbody id="adminTableBody"></tbody>
+            </table>
+        </section>
+        <section class="review-section" aria-labelledby="paymentReviewTitle">
+            <div class="admin-header"><h2 id="paymentReviewTitle"><i class="fa-solid fa-receipt" aria-hidden="true"></i>Payment verification</h2></div>
+            <p class="review-note">Check each transfer in your UPI or bank account before marking it verified. A UTR by itself is not proof of payment.</p>
+            <div class="admin-table-wrapper payment-review-wrapper">
+                <table>
+                    <thead><tr><th scope="col">Order</th><th scope="col">Listing</th><th scope="col">Amount</th><th scope="col">UTR / reference</th><th scope="col">Created</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+                    <tbody id="paymentReviewBody"></tbody>
+                </table>
+            </div>
+        </section>
+        <section class="review-section" aria-labelledby="serviceReviewTitle">
+            <div class="admin-header"><h2 id="serviceReviewTitle"><i class="fa-solid fa-toolbox" aria-hidden="true"></i>Service requests</h2></div>
+            <p class="review-note">Contact numbers for the ₹10 service are revealed to the customer only after verification.</p>
+            <div class="admin-table-wrapper service-review-wrapper">
+                <table>
+                    <thead><tr><th scope="col">Request</th><th scope="col">Service</th><th scope="col">Customer</th><th scope="col">Phone / Email</th><th scope="col">UID / Details</th><th scope="col">Fee / UTR</th><th scope="col">Created</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+                    <tbody id="serviceRequestsBody"></tbody>
+                </table>
+            </div>
+        </section>
+        <section class="review-section" aria-labelledby="serviceReviewTitle">
+            <div class="admin-header"><h2 id="serviceReviewTitle"><i class="fa-solid fa-toolbox" aria-hidden="true"></i>Service requests</h2></div>
+            <p class="review-note">Verify the ₹10 transfer before revealing the admin contact number.</p>
+            <div class="admin-table-wrapper service-review-wrapper">
+                <table>
+                    <thead><tr><th scope="col">Request</th><th scope="col">Service</th><th scope="col">Customer</th><th scope="col">Phone / Email</th><th scope="col">UID / Details</th><th scope="col">Fee / UTR</th><th scope="col">Created</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+                    <tbody id="serviceRequestsBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <footer class="page-footer">Catalog changes are saved by the server. Admin access is a local demo gate, not production authentication.</footer>
+</div>
+
+<dialog id="accountDialog" aria-labelledby="accountDialogTitle">
+    <form class="admin-form" id="accountForm">
+        <h2 id="accountDialogTitle">Add account</h2>
+        <input type="hidden" id="accountId">
+        <label>Title<input id="accountTitle" maxlength="80" required></label>
+        <label>Level<input id="accountLevel" type="number" min="1" max="100" required></label>
+        <label>Rank<input id="accountRank" maxlength="40" required></label>
+        <label>Price (INR)<input id="accountPrice" type="number" min="0" step="0.01" required></label>
+        <label>Category<select id="accountCategory" required><option value="legend">Legendary</option><option value="rare">Rare</option><option value="starter">Starter</option></select></label>
+        <label>Status<select id="accountStatus" required><option value="available">Available</option><option value="pending">Pending</option><option value="sold">Sold</option></select></label>
+        <div class="form-actions"><button type="button" class="btn-outline" id="cancelAccountBtn">Cancel</button><button type="submit" class="btn-primary">Save account</button></div>
+    </form>
+</dialog>
+
+<script>
+(() => {
+    'use strict';
+    let adminToken = '';
+    let hasAdminEntry = false;
+    try {
+        adminToken = sessionStorage.getItem('omstore_admin_token') || '';
+        hasAdminEntry = sessionStorage.getItem('omstore_admin_entry') === 'true';
+        sessionStorage.removeItem('omstore_admin_entry');
+    } catch { /* Require a fresh login when session storage is unavailable. */ }
+    if (!adminToken || !hasAdminEntry) {
+        window.location.replace('login.html');
+        return;
+    }
+    function adminFetch(url, options = {}) {
+        return fetch(url, {
+            ...options,
+            headers: { ...options.headers, Authorization: `Bearer ${adminToken}` }
+        });
+    }
+    let accounts = [];
+    let orders = [];
+    let serviceRequests = [];
+    const stats = document.getElementById('adminStatsGrid');
+    const tableBody = document.getElementById('adminTableBody');
+    const paymentReviewBody = document.getElementById('paymentReviewBody');
+    const serviceRequestsBody = document.getElementById('serviceRequestsBody');
+    const dialog = document.getElementById('accountDialog');
+    const form = document.getElementById('accountForm');
+    const field = id => document.getElementById(id);
+    const formatRupees = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value));
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    }
+    function renderAdmin() {
+        const total = accounts.length;
+        const available = accounts.filter(account => account.status === 'available').length;
+        const sold = accounts.filter(account => account.status === 'sold').length;
+        const inventoryValue = accounts.reduce((sum, account) => sum + (Number(account.price) || 0), 0);
+        stats.innerHTML = `
+            <article class="stat-card"><span class="stat-icon"><i class="fa-solid fa-database" aria-hidden="true"></i></span><div class="stat-info"><h3>Total IDs</h3><div class="value">${total}</div></div></article>
+            <article class="stat-card"><span class="stat-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span><div class="stat-info"><h3>Available</h3><div class="value">${available}</div></div></article>
+            <article class="stat-card"><span class="stat-icon"><i class="fa-solid fa-tag" aria-hidden="true"></i></span><div class="stat-info"><h3>Sold</h3><div class="value">${sold}</div></div></article>
+            <article class="stat-card"><span class="stat-icon"><i class="fa-solid fa-indian-rupee-sign" aria-hidden="true"></i></span><div class="stat-info"><h3>Inventory value</h3><div class="value">${formatRupees(inventoryValue)}</div></div></article>`;
+        tableBody.innerHTML = accounts.map(account => {
+            const status = ['available', 'sold', 'pending'].includes(account.status) ? account.status : 'pending';
+            return `<tr>
+                <td>#${Number(account.id)}</td><td><strong>${escapeHtml(account.title)}</strong></td>
+                <td>Level ${Number(account.level)} · ${escapeHtml(account.rank)}</td><td>${formatRupees(account.price)}</td>
+                <td><span class="status-badge ${status}">${status[0].toUpperCase() + status.slice(1)}</span></td>
+                <td><div class="table-actions"><button type="button" class="icon-button" data-action="edit" data-id="${Number(account.id)}" aria-label="Edit ${escapeHtml(account.title)}" title="Edit"><i class="fa-solid fa-pen" aria-hidden="true"></i></button><button type="button" class="icon-button delete" data-action="delete" data-id="${Number(account.id)}" aria-label="Delete ${escapeHtml(account.title)}" title="Delete"><i class="fa-solid fa-trash" aria-hidden="true"></i></button></div></td>
+            </tr>`;
+        }).join('');
+    }
+    async function refreshAccounts() {
+        try {
+            const response = await adminFetch('/api/admin/accounts');
+            const result = await response.json().catch(() => []);
+            if (!response.ok) throw new Error(result.message || 'Could not load server catalog.');
+            accounts = result;
+            renderAdmin();
+        } catch (error) {
+            tableBody.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+        }
+    }
+    function renderPaymentRequests() {
+        if (orders.length === 0) {
+            paymentReviewBody.innerHTML = '<tr><td colspan="7">No orders have been created.</td></tr>';
+            return;
+        }
+        paymentReviewBody.innerHTML = orders.map(order => {
+            const status = ['awaiting_payment', 'payment_review', 'verified', 'rejected'].includes(order.status) ? order.status : 'awaiting_payment';
+            const statusLabel = { awaiting_payment: 'Awaiting payment', payment_review: 'Under review', verified: 'Verified', rejected: 'Rejected' }[status];
+            const statusClass = status === 'verified' ? 'verified' : status === 'rejected' ? 'rejected' : 'pending';
+            const created = new Date(order.createdAt).toLocaleString('en-IN');
+            const reviewButtons = status === 'payment_review'
+                ? `<div class="review-actions"><button type="button" class="btn-verify" data-review="verified" data-id="${escapeHtml(order.orderId)}"><i class="fa-solid fa-check" aria-hidden="true"></i>Verify</button><button type="button" class="btn-reject" data-review="rejected" data-id="${escapeHtml(order.orderId)}"><i class="fa-solid fa-xmark" aria-hidden="true"></i>Reject</button></div>`
+                : '—';
+            return `<tr>
+                <td><code>${escapeHtml(order.orderId)}</code></td>
+                <td><strong>${escapeHtml(order.title)}</strong></td>
+                <td>${formatRupees(order.amount)}</td>
+                <td><code>${escapeHtml(order.utr || '—')}</code></td>
+                <td>${escapeHtml(created)}</td>
+                <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td>${reviewButtons}</td>
+            </tr>`;
+        }).join('');
+    }
+    async function refreshOrders() {
+        try {
+            const response = await adminFetch('/api/admin/orders');
+            if (!response.ok) throw new Error('Could not load server orders.');
+            orders = await response.json();
+            renderPaymentRequests();
+        } catch (error) {
+            paymentReviewBody.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
+        }
+    }
+    function renderServiceRequests() {
+        if (serviceRequests.length === 0) {
+            serviceRequestsBody.innerHTML = '<tr><td colspan="9">No service requests yet.</td></tr>';
+            return;
+        }
+        serviceRequestsBody.innerHTML = serviceRequests.map(request => {
+            const statusLabels = { submitted: 'Submitted', payment_review: 'Payment review', verified: 'Verified', rejected: 'Rejected', accepted: 'Accepted', completed: 'Completed' };
+            const status = statusLabels[request.status] ? request.status : 'submitted';
+            const statusClass = ['verified', 'completed'].includes(status) ? 'verified' : status === 'rejected' ? 'rejected' : ['submitted', 'accepted'].includes(status) ? 'submitted' : 'pending';
+            const created = new Date(request.createdAt).toLocaleString('en-IN');
+            let actions = '—';
+            if (Number(request.amount) > 0 && status === 'payment_review') {
+                actions = `<div class="review-actions"><button class="btn-verify" type="button" data-service-status="verified" data-id="${escapeHtml(request.requestId)}">Verify ${formatRupees(request.amount)}</button><button class="btn-reject" type="button" data-service-status="rejected" data-id="${escapeHtml(request.requestId)}">Reject</button></div>`;
+            } else if (status === 'submitted') {
+                actions = `<div class="review-actions"><button class="btn-verify" type="button" data-service-status="accepted" data-id="${escapeHtml(request.requestId)}">Accept</button><button class="btn-reject" type="button" data-service-status="rejected" data-id="${escapeHtml(request.requestId)}">Reject</button></div>`;
+            } else if (status === 'accepted' || (status === 'verified' && request.serviceKey !== 'contact_admin')) {
+                actions = `<button class="btn-verify" type="button" data-service-status="completed" data-id="${escapeHtml(request.requestId)}">Complete</button>`;
+            }
+            const buyer = request.buyer || {};
+            const details = [buyer.gameUid ? `UID: ${buyer.gameUid}` : '', buyer.notes || ''].filter(Boolean).join('\n') || '—';
+            const fee = Number(request.amount) > 0
+                ? `${formatRupees(request.amount)}<br><code>${escapeHtml(request.utr || '—')}</code>`
+                : request.amount === null ? 'Price on review' : 'No fee';
+            return `<tr>
+                <td><code>${escapeHtml(request.requestId)}</code></td>
+                <td><strong>${escapeHtml(request.serviceName)}</strong></td>
+                <td>${escapeHtml(buyer.name || '—')}<br><small>@${escapeHtml(buyer.instagram || '—')}</small></td>
+                <td>${escapeHtml(buyer.phone || '—')}<br><small>${escapeHtml(buyer.email || '—')}</small></td>
+                <td class="service-details-cell">${escapeHtml(details)}</td>
+                <td>${fee}</td>
+                <td>${escapeHtml(created)}</td>
+                <td><span class="status-badge ${statusClass}">${statusLabels[status]}</span></td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join('');
+    }
+    async function refreshServiceRequests() {
+        try {
+            const response = await adminFetch('/api/admin/service-requests');
+            const result = await response.json().catch(() => []);
+            if (!response.ok) throw new Error(result.message || 'Could not load service requests.');
+            serviceRequests = result;
+            renderServiceRequests();
+        } catch (error) {
+            serviceRequestsBody.innerHTML = `<tr><td colspan="9">${escapeHtml(error.message)}</td></tr>`;
+        }
+    }
+    function openForm(account) {
+        form.reset();
+        field('accountDialogTitle').textContent = account ? 'Edit account' : 'Add account';
+        field('accountId').value = account ? String(account.id) : '';
+        field('accountTitle').value = account ? account.title : '';
+        field('accountLevel').value = account ? String(account.level) : '30';
+        field('accountRank').value = account ? account.rank : 'Gold III';
+        field('accountPrice').value = account ? String(account.price) : '2499';
+        field('accountCategory').value = account ? account.category : 'starter';
+        field('accountStatus').value = account ? account.status : 'available';
+        dialog.showModal();
+        field('accountTitle').focus();
+    }
+    document.getElementById('addAccountBtn').addEventListener('click', () => openForm(null));
+    document.getElementById('refreshAdminBtn').addEventListener('click', () => {
+        refreshAccounts();
+        refreshOrders();
+    });
+    document.getElementById('cancelAccountBtn').addEventListener('click', () => dialog.close());
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const idValue = field('accountId').value;
+        const category = field('accountCategory').value;
+        const account = {
+            title: field('accountTitle').value.trim(),
+            level: Number(field('accountLevel').value),
+            rank: field('accountRank').value.trim(),
+            price: Number(field('accountPrice').value),
+            category,
+            status: field('accountStatus').value,
+            tag: category === 'legend' ? 'Legendary' : category === 'rare' ? 'Rare' : 'Starter'
+        };
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+            const response = await adminFetch(idValue ? `/api/admin/accounts/${encodeURIComponent(idValue)}` : '/api/admin/accounts', {
+                method: idValue ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(account)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not save the account.');
+            dialog.close();
+            await refreshAccounts();
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+    tableBody.addEventListener('click', async event => {
+        const button = event.target.closest('[data-action]');
+        if (!button) return;
+        const id = Number(button.dataset.id);
+        const account = accounts.find(item => Number(item.id) === id);
+        if (!account) return;
+        if (button.dataset.action === 'edit') openForm(account);
+        if (button.dataset.action === 'delete' && confirm(`Delete "${account.title}"?`)) {
+            button.disabled = true;
+            try {
+                const response = await adminFetch(`/api/admin/accounts/${id}`, { method: 'DELETE' });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(result.message || 'Could not delete the account.');
+                await refreshAccounts();
+            } catch (error) {
+                button.disabled = false;
+                alert(error.message);
+            }
+        }
+    });
+    paymentReviewBody.addEventListener('click', async event => {
+        const button = event.target.closest('[data-review]');
+        if (!button) return;
+        const order = orders.find(item => item.orderId === button.dataset.id && item.status === 'payment_review');
+        if (!order) return;
+        button.disabled = true;
+        try {
+            const response = await adminFetch(`/api/admin/orders/${encodeURIComponent(order.orderId)}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: button.dataset.review })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not update the order.');
+            await refreshAccounts();
+            await refreshOrders();
+        } catch (error) {
+            button.disabled = false;
+            alert(error.message);
+        }
+    });
+    serviceRequestsBody.addEventListener('click', async event => {
+        const button = event.target.closest('[data-service-status]');
+        if (!button) return;
+        button.disabled = true;
+        try {
+            const response = await adminFetch(`/api/admin/service-requests/${encodeURIComponent(button.dataset.id)}/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: button.dataset.serviceStatus })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not update this service request.');
+            await refreshServiceRequests();
+        } catch (error) {
+            button.disabled = false;
+            alert(error.message);
+        }
+    });
+    document.getElementById('logoutBtn').addEventListener('click', event => {
+        event.preventDefault();
+        try {
+            sessionStorage.removeItem('omstore_admin_token');
+            sessionStorage.removeItem('omstore_admin_entry');
+        } catch { /* Continue to the public page. */ }
+        window.location.assign('index.html');
+    });
+    refreshAccounts();
+    refreshOrders();
+    refreshServiceRequests();
+    window.setInterval(() => {
+        refreshAccounts();
+        refreshOrders();
+        refreshServiceRequests();
+    }, 10000);
+})();
+</script>
+</body>
+</html>

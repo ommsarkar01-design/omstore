@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Demo administrator sign-in for OM STORE.">
+    <title>Admin Login | OM STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+    <header class="main-header">
+        <a href="index.html" class="logo-area" aria-label="OM STORE home"><span class="logo-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span><span class="logo-text"><h1>OM STORE</h1><span>Free Fire ID marketplace</span></span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="index.html"><i class="fa-solid fa-store" aria-hidden="true"></i><span>Store</span></a>
+            <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>About</span></a>
+            <a href="contact.html"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+            <a href="services.html"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>Services</span></a>
+            <a href="help.html"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Help</span></a>
+            <a href="login.html" class="active" aria-current="page"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Admin</span></a>
+        </nav>
+        <div class="header-actions"><div class="avatar-badge"><i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>Guest</span></div></div>
+    </header>
+    <main class="login-wrapper">
+        <section class="login-card" aria-labelledby="login-title">
+            <div class="logo-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+            <h2 id="login-title">Admin login</h2>
+            <p>Enter the demo passcode to open the dashboard.</p>
+            <div class="login-error" id="loginError" role="alert">Incorrect passcode. Please try again.</div>
+            <form id="loginForm">
+                <div class="login-input-group"><label for="adminPasswordInput">Demo passcode</label><input type="password" id="adminPasswordInput" autocomplete="current-password" required></div>
+                <button type="submit" class="login-btn"><i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i>Log in</button>
+            </form>
+            <p class="demo-notice">Demo only: the passcode is included in this page's JavaScript. This browser-side check is not security and must not protect real data.</p>
+        </section>
+    </main>
+</div>
+<script>
+(() => {
+    'use strict';
+    const form = document.getElementById('loginForm');
+    const password = document.getElementById('adminPasswordInput');
+    const error = document.getElementById('loginError');
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+            const response = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: password.value })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not sign in. Please try again.');
+            sessionStorage.setItem('omstore_admin_token', result.token);
+            sessionStorage.setItem('omstore_admin_entry', 'true');
+            window.location.assign('admin.html');
+        } catch (loginError) {
+            error.textContent = loginError.message || 'Could not sign in. Please try again.';
+            error.classList.add('show');
+            password.value = '';
+            password.focus();
+            button.disabled = false;
+        }
+    });
+    password.addEventListener('input', () => error.classList.remove('show'));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.env
+data/orders.json
+data/orders.json.tmp
+data/accounts.json.tmp
+data/service-requests.json
+data/service-requests.json.tmp
+data/service-config.json
+data/om-store.sqlite
+data/om-store.sqlite-wal
+data/om-store.sqlite-shm

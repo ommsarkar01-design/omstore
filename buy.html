@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Review your OM STORE demo order.">
+    <title>Checkout | OM STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+    <header class="main-header">
+        <a href="index.html" class="logo-area" aria-label="OM STORE home">
+            <span class="logo-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
+            <span class="logo-text"><h1>OM STORE</h1><span>Free Fire ID marketplace</span></span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="index.html"><i class="fa-solid fa-store" aria-hidden="true"></i><span>Store</span></a>
+            <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>About</span></a>
+            <a href="contact.html"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+            <a href="services.html"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>Services</span></a>
+            <a href="help.html"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Help</span></a>
+            <a href="login.html"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Admin</span></a>
+        </nav>
+        <div class="header-actions"><div class="avatar-badge"><i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>Guest</span></div></div>
+    </header>
+
+    <main class="checkout-page" id="checkoutContent" aria-live="polite">
+        <h1 class="checkout-heading">Review your order</h1>
+        <p class="checkout-intro">Confirm the listing details before continuing.</p>
+        <div id="checkoutState"></div>
+    </main>
+    <footer class="page-footer">Demo checkout only. No payment is collected and no order is sent.</footer>
+</div>
+
+<script>
+ (async () => {
+    'use strict';
+    const target = document.getElementById('checkoutState');
+    const UPI_ID = '0mmprakash01@fam';
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    }
+    async function loadAccounts() {
+        const response = await fetch('/api/accounts');
+        if (!response.ok) throw new Error('Could not load the store catalog.');
+        return response.json();
+    }
+    const formatRupees = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value));
+    const selectedId = new URLSearchParams(window.location.search).get('id');
+    let accounts;
+    try { accounts = await loadAccounts(); }
+    catch {
+        target.innerHTML = '<section class="checkout-unavailable"><h2>Store is temporarily unavailable</h2><p>Please return to the store and try again shortly.</p><a class="btn-primary" href="index.html">Back to store</a></section>';
+        return;
+    }
+    const account = accounts.find(item => String(item.id) === selectedId && item.status === 'available');
+    if (!account) {
+        target.innerHTML = '<section class="checkout-unavailable"><h2>This listing is unavailable</h2><p>It may have been sold, removed, or the checkout link is invalid.</p><a class="btn-primary" href="index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to store</a></section>';
+        return;
+    }
+    const title = escapeHtml(account.title);
+    const rank = escapeHtml(account.rank);
+    const price = Number(account.price);
+    if (!Number.isFinite(price) || price <= 0) {
+        target.innerHTML = '<section class="checkout-unavailable"><h2>Invalid listing price</h2><p>Please return to the store and choose another listing.</p><a class="btn-primary" href="index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to store</a></section>';
+        return;
+    }
+    let order;
+    const checkoutOrderKey = `omstore_checkout_order_${account.id}`;
+    try {
+        const existingOrderId = sessionStorage.getItem(checkoutOrderKey);
+        if (existingOrderId) {
+            const existingResponse = await fetch(`/api/orders/${encodeURIComponent(existingOrderId)}`);
+            if (existingResponse.ok) {
+                const existingOrder = await existingResponse.json();
+                if (existingOrder.status === 'awaiting_payment' && existingOrder.title === account.title && Number(existingOrder.amount) === price) order = existingOrder;
+            }
+        }
+        if (!order) {
+            const createResponse = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ listing: { id: Number(account.id), title: account.title, amount: price } })
+            });
+            const result = await createResponse.json().catch(() => ({}));
+            if (!createResponse.ok) throw new Error(result.message || 'Could not create an order. Please try again.');
+            order = result;
+            sessionStorage.setItem(checkoutOrderKey, order.orderId);
+        }
+    } catch (error) {
+        target.innerHTML = `<section class="checkout-unavailable"><h2>Could not create your order</h2><p>${escapeHtml(error.message)}</p><a class="btn-primary" href="index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to store</a></section>`;
+        return;
+    }
+    const amount = price.toFixed(2);
+    const orderId = order.orderId;
+    const upiUrl = `upi://pay?${new URLSearchParams({ pa: UPI_ID, pn: 'OM STORE', am: amount, cu: 'INR', tn: `OM STORE ${orderId}` })}`;
+    target.innerHTML = `
+        <div class="checkout-layout">
+            <section class="checkout-panel">
+                <h2>Pay with UPI</h2>
+                <div class="checkout-order-id"><span>Order number</span><strong>${escapeHtml(orderId)}</strong></div>
+                <div class="payment-qr-wrap"><div id="paymentQr" role="img" aria-label="UPI QR code for this order"></div><p>Scan with a UPI app to pay <strong>${formatRupees(price)}</strong></p></div>
+                <div class="upi-details"><div><span>UPI ID</span><strong id="upiIdText">${UPI_ID}</strong></div><button type="button" class="btn-outline" id="copyUpiId"><i class="fa-regular fa-copy" aria-hidden="true"></i>Copy ID</button></div>
+                <a class="btn-primary upi-open" id="upiIntentLink" href="${upiUrl}"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>Open UPI app</a>
+                <p class="checkout-notice"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Payment status is not verified by this demo. Contact the store after paying.</p>
+                <p class="payment-status" id="paymentStatus" role="status" aria-live="polite"></p>
+                <div class="utr-panel">
+                    <h2>Already paid?</h2>
+                    <p>Enter your contact details and the UTR or transaction reference from your UPI app. The store will receive these details on Telegram to follow up and review payment manually.</p>
+                    <form class="utr-form" id="utrForm">
+                        <label for="buyerName">Your name<input id="buyerName" name="buyerName" minlength="2" maxlength="80" autocomplete="name" required></label>
+                        <label for="buyerPhone">Phone / WhatsApp number<input id="buyerPhone" name="buyerPhone" type="tel" minlength="7" maxlength="20" pattern="[+]?[0-9][0-9\s().\x2d]{5,18}[0-9]" autocomplete="tel" placeholder="+91 98765 43210" required></label>
+                        <label for="buyerEmail">Email address<input id="buyerEmail" name="buyerEmail" type="email" maxlength="254" autocomplete="email" required></label>
+                        <label for="buyerInstagram">Instagram username<input id="buyerInstagram" name="buyerInstagram" minlength="1" maxlength="31" pattern="@?[A-Za-z0-9._]{1,30}" autocapitalize="none" placeholder="@username" required></label>
+                        <label for="utrInput">UPI UTR / reference<input id="utrInput" name="utr" minlength="8" maxlength="32" pattern="[A-Za-z0-9\x2d]{8,32}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Enter your transaction reference" required></label>
+                        <label class="utr-consent"><input id="contactConsent" name="contactConsent" type="checkbox" required><span>I agree to send my name, phone, email, Instagram username, order, and UTR to the store’s Telegram account for payment review and contact.</span></label>
+                        <button class="btn-primary" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i>Send details for verification</button>
+                    </form>
+                    <p class="utr-note">Submitting reserves this listing. It does not confirm payment; the admin must check their UPI/bank account. Do not submit passwords, OTPs, or card details.</p>
+                </div>
+            </section>
+            <aside class="checkout-panel" aria-label="Order summary">
+                <h2>Order summary</h2>
+                <div class="order-item"><span class="ff-icon-big"><i class="fa-solid fa-user-astronaut" aria-hidden="true"></i></span><div><h3>${title}</h3><p>Level ${Number(account.level)} · ${rank}</p></div></div>
+                <div class="summary-line"><span>Account</span><span>${formatRupees(price)}</span></div>
+                <div class="summary-line"><span>Delivery</span><span>Included</span></div>
+                <div class="summary-line total"><span>Total</span><strong>${formatRupees(price)}</strong></div>
+            </aside>
+        </div>`;
+    const qr = document.getElementById('paymentQr');
+    if (typeof QRCode === 'function') {
+        new QRCode(qr, { text: upiUrl, width: 220, height: 220, colorDark: '#101820', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    } else {
+        qr.textContent = 'QR could not load. Use the UPI ID and amount shown here.';
+        qr.classList.add('qr-fallback');
+    }
+    document.getElementById('copyUpiId').addEventListener('click', async () => {
+        const status = document.getElementById('paymentStatus');
+        try {
+            await navigator.clipboard.writeText(UPI_ID);
+            status.textContent = 'UPI ID copied.';
+        } catch {
+            status.textContent = `UPI ID: ${UPI_ID}`;
+        }
+    });
+    document.getElementById('utrForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const status = document.getElementById('paymentStatus');
+        const utr = document.getElementById('utrInput').value.trim().toUpperCase();
+        if (!/^[A-Z0-9-]{8,32}$/.test(utr)) {
+            status.textContent = 'Enter a valid UTR/reference using 8 to 32 letters, numbers, or hyphens.';
+            return;
+        }
+        const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+        try {
+            const currentResponse = await fetch('/api/accounts');
+            if (!currentResponse.ok) throw new Error('Could not refresh the store catalog.');
+            const allAccounts = await currentResponse.json();
+            const currentAccount = allAccounts.find(item => Number(item.id) === Number(account.id));
+            if (!currentAccount || currentAccount.status !== 'available') {
+                status.textContent = 'This listing is no longer available.';
+                return;
+            }
+            const buyerDetails = {
+                name: document.getElementById('buyerName').value.trim(),
+                phone: document.getElementById('buyerPhone').value.trim(),
+                email: document.getElementById('buyerEmail').value.trim(),
+                instagram: document.getElementById('buyerInstagram').value.trim().replace(/^@/, '')
+            };
+            submitButton.disabled = true;
+            status.textContent = 'Sending details securely…';
+            const response = await fetch('/api/submit-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId,
+                    listing: { id: currentAccount.id, title: currentAccount.title, amount: Number(currentAccount.price) },
+                    buyer: buyerDetails,
+                    utr,
+                    consent: document.getElementById('contactConsent').checked
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not send details. Please try again or contact the store.');
+            target.innerHTML = `<section class="checkout-result" role="status"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i><h2>Payment details received</h2><p>Order ${escapeHtml(orderId)} is awaiting payment verification. After payment is verified, the full account details will be sent within 1 hour.</p><a class="btn-primary" href="help.html?order=${encodeURIComponent(orderId)}"><i class="fa-solid fa-headset" aria-hidden="true"></i>Check order status</a></section>`;
+        } catch (error) {
+            status.textContent = error.message || 'Could not send details. Please try again or contact the store.';
+            submitButton.disabled = false;
+        }
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Browse demo Free Fire account listings at OM STORE.">
+    <title>OM STORE | Free Fire ID Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+    <header class="main-header">
+        <a href="index.html" class="logo-area" aria-label="OM STORE home">
+            <span class="logo-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
+            <span class="logo-text"><h1>OM STORE</h1><span>Free Fire ID marketplace</span></span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="index.html" class="active" aria-current="page"><i class="fa-solid fa-store" aria-hidden="true"></i><span>Store</span></a>
+            <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>About</span></a>
+            <a href="contact.html"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+            <a href="services.html"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>Services</span></a>
+            <a href="help.html"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Help</span></a>
+            <a href="login.html"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Admin</span></a>
+        </nav>
+        <div class="header-actions"><div class="avatar-badge"><i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>Guest</span></div></div>
+    </header>
+
+    <main>
+        <section class="hero-store" aria-labelledby="hero-title">
+            <h2 id="hero-title"><i class="fa-solid fa-fire" aria-hidden="true"></i>Premium Free Fire IDs<br>Instant and secure</h2>
+            <div class="hero-stats"><div class="stat-pill"><i class="fa-solid fa-gamepad" aria-hidden="true"></i>240+ sold</div><div class="stat-pill"><i class="fa-solid fa-star" aria-hidden="true"></i>4.9 rating</div></div>
+        </section>
+
+        <section aria-label="Browse accounts">
+            <div class="store-toolbar">
+                <form class="search-box" id="storeSearchForm" role="search">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="search" id="storeSearchInput" placeholder="Search title, rank, or level" aria-label="Search accounts">
+                    <button class="btn-primary" type="submit" aria-label="Search"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                </form>
+                <div class="filter-group" id="storeFilters" aria-label="Filter accounts">
+                    <button class="filter-btn active" type="button" data-filter="all" aria-pressed="true">All</button>
+                    <button class="filter-btn" type="button" data-filter="legend" aria-pressed="false"><i class="fa-solid fa-crown" aria-hidden="true"></i> Legendary</button>
+                    <button class="filter-btn" type="button" data-filter="rare" aria-pressed="false"><i class="fa-solid fa-gem" aria-hidden="true"></i> Rare</button>
+                    <button class="filter-btn" type="button" data-filter="starter" aria-pressed="false"><i class="fa-solid fa-seedling" aria-hidden="true"></i> Starter</button>
+                </div>
+            </div>
+            <div class="product-grid" id="storeProductGrid" aria-live="polite"></div>
+        </section>
+
+        <div class="trust-footer" aria-label="Store information">
+            <span><i class="fa-solid fa-lock" aria-hidden="true"></i>Escrow protected</span>
+            <span><i class="fa-solid fa-bolt" aria-hidden="true"></i>Instant delivery</span>
+            <span><i class="fa-solid fa-headset" aria-hidden="true"></i>24/7 support</span>
+            <span><i class="fa-solid fa-circle-check" aria-hidden="true"></i>Verified IDs</span>
+        </div>
+    </main>
+    <footer class="page-footer">OM STORE demo marketplace. Listings and checkout are for demonstration only.</footer>
+</div>
+
+<script>
+(() => {
+    'use strict';
+    async function loadAccounts() {
+        const response = await fetch('/api/accounts');
+        if (!response.ok) throw new Error('Could not load the store catalog.');
+        return response.json();
+    }
+    let accounts = [];
+    let activeFilter = 'all';
+    const grid = document.getElementById('storeProductGrid');
+    const input = document.getElementById('storeSearchInput');
+    const filterButtons = document.querySelectorAll('#storeFilters [data-filter]');
+    const formatRupees = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value));
+
+    function renderStore() {
+        const query = input.value.trim().toLowerCase();
+        const filtered = accounts.filter(account => account.status === 'available' &&
+            (activeFilter === 'all' || account.category === activeFilter) &&
+            [account.title, account.rank, account.tag, String(account.level)].some(value => String(value).toLowerCase().includes(query)));
+        if (filtered.length === 0) {
+            grid.innerHTML = '<p class="empty-state">No available IDs match your search.</p>';
+            return;
+        }
+        grid.innerHTML = filtered.map(account => {
+            const safeTitle = escapeHtml(account.title);
+            const safeRank = escapeHtml(account.rank);
+            const safeTag = escapeHtml(account.tag);
+            const tagClass = account.category === 'legend' ? 'legendary' : account.category === 'rare' ? 'rare' : '';
+            return `<article class="product-card">
+                <div class="card-header"><span class="ff-icon-big"><i class="fa-solid fa-user-astronaut" aria-hidden="true"></i></span><span class="badge-gold">${safeTag}</span></div>
+                <div class="card-body"><h3>${safeTitle}<span class="account-tag ${tagClass}">${safeTag}</span></h3>
+                    <div class="meta-list"><span><i class="fa-solid fa-arrow-up-wide-short" aria-hidden="true"></i>Level ${Number(account.level)}</span><span><i class="fa-solid fa-trophy" aria-hidden="true"></i>${safeRank}</span></div>
+                    <div class="price-buy"><div class="price">${formatRupees(account.price)} <small>INR</small></div><button class="btn-buy" type="button" data-id="${Number(account.id)}"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Buy</button></div>
+                </div>
+            </article>`;
+        }).join('');
+    }
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    }
+    document.getElementById('storeSearchForm').addEventListener('submit', event => event.preventDefault());
+    input.addEventListener('input', renderStore);
+    filterButtons.forEach(button => button.addEventListener('click', () => {
+        activeFilter = button.dataset.filter;
+        filterButtons.forEach(item => {
+            const selected = item === button;
+            item.classList.toggle('active', selected);
+            item.setAttribute('aria-pressed', String(selected));
+        });
+        renderStore();
+    }));
+    grid.addEventListener('click', event => {
+        const button = event.target.closest('[data-id]');
+        if (!button) return;
+        const account = accounts.find(item => item.id === Number(button.dataset.id));
+        if (account) window.location.assign(`buy.html?id=${encodeURIComponent(account.id)}`);
+    });
+    function refreshStore() {
+        loadAccounts().then(loadedAccounts => {
+            accounts = loadedAccounts;
+            renderStore();
+        }).catch(() => {
+            if (accounts.length === 0) storeGrid.innerHTML = '<p class="empty-state">The store catalog is unavailable. Please try again shortly.</p>';
+        });
+    }
+    refreshStore();
+    window.setInterval(refreshStore, 10000);
+})();
+</script>
+</body>
+</html>

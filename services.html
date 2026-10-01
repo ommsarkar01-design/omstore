@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Request OM STORE account services or contact admin.">
+    <title>Services | OM STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+    <header class="main-header">
+        <a href="index.html" class="logo-area" aria-label="OM STORE home"><span class="logo-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span><span class="logo-text"><h1>OM STORE</h1><span>Free Fire ID marketplace</span></span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="index.html"><i class="fa-solid fa-store" aria-hidden="true"></i><span>Store</span></a>
+            <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>About</span></a>
+            <a href="contact.html"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+            <a href="services.html" class="active" aria-current="page"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>Services</span></a>
+            <a href="help.html"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Help</span></a>
+            <a href="login.html"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Admin</span></a>
+        </nav>
+        <div class="header-actions"><div class="avatar-badge"><i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>Guest</span></div></div>
+    </header>
+
+    <main class="services-page">
+        <header class="services-heading"><div><p class="section-kicker">OM STORE</p><h1>Services</h1><p>Choose a service and send a request for admin review.</p></div></header>
+        <section aria-label="Available services">
+            <div class="services-grid" id="serviceChoices">
+                <button class="service-choice" type="button" data-service="source_file_bind"><i class="fa-solid fa-link" aria-hidden="true"></i><span>Source file bind <b>₹1,000</b></span><small>UPI payment and UTR review required</small></button>
+                <button class="service-choice" type="button" data-service="single_unsubscribe"><i class="fa-solid fa-link-slash" aria-hidden="true"></i><span>Single unsubscribe</span><small>Price confirmed by admin</small></button>
+                <button class="service-choice" type="button" data-service="double_unsubscribe"><i class="fa-solid fa-link-slash" aria-hidden="true"></i><span>Double security <b>₹2,000</b></span><small>UPI payment and UTR review required</small></button>
+                <button class="service-choice" type="button" data-service="sell_my_id"><i class="fa-solid fa-tag" aria-hidden="true"></i><span>Sell my ID <b>₹100</b></span><small>Seller service fee; UPI payment and UTR review required</small></button>
+                <button class="service-choice" type="button" data-service="security_service"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Find security service</span><small>Price confirmed by admin</small></button>
+                <button class="service-choice paid" type="button" data-service="contact_admin"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Contact admin <b>₹10</b></span><small>Verified payment reveals the admin number</small></button>
+            </div>
+        </section>
+
+        <section class="service-request-panel" id="serviceRequestPanel" hidden aria-labelledby="serviceRequestTitle">
+            <div class="service-panel-heading"><div><p class="section-kicker">REQUEST</p><h2 id="serviceRequestTitle">Service request</h2><p id="serviceDescription"></p></div><button class="icon-button" id="closeServiceForm" type="button" aria-label="Close service request"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+            <div id="servicePaymentPanel" class="service-payment" hidden>
+                <div class="service-payment-copy"><span class="service-price" id="serviceFeeAmount">₹10.00</span><span id="serviceFeeLabel">Service fee</span><p>Pay using UPI, then enter the transaction UTR below. The request is handled after manual payment verification.</p></div>
+                <div class="service-payment-qr"><div id="serviceQr" role="img" aria-label="UPI QR code for the selected service fee"></div><strong id="serviceQrCaption">Scan to pay ₹10</strong></div>
+                <div class="upi-details"><div><span>UPI ID</span><strong>0mmprakash01@fam</strong></div><button class="btn-outline" id="copyServiceUpi" type="button"><i class="fa-regular fa-copy" aria-hidden="true"></i>Copy ID</button></div>
+            </div>
+            <form class="service-form" id="serviceRequestForm">
+                <input id="serviceKey" type="hidden">
+                <div class="service-form-grid">
+                    <label>Your name<input id="serviceName" maxlength="80" autocomplete="name" required></label>
+                    <label>Phone / WhatsApp<input id="servicePhone" type="tel" inputmode="numeric" maxlength="15" pattern="[0-9]{7,15}" autocomplete="tel" required></label>
+                    <label>Email address<input id="serviceEmail" type="email" maxlength="254" autocomplete="email" required></label>
+                    <label>Instagram username<input id="serviceInstagram" maxlength="31" pattern="@?[A-Za-z0-9._]{1,30}" autocapitalize="none" placeholder="@username" required></label>
+                    <label>Free Fire UID <span class="optional-label">Optional</span><input id="serviceGameUid" maxlength="40" inputmode="numeric"></label>
+                    <label id="serviceUtrField" hidden>UPI UTR / reference<input id="serviceUtr" maxlength="32" pattern="[A-Za-z0-9]{8,32}" autocapitalize="characters" autocomplete="off" placeholder="Enter UPI transaction reference"></label>
+                </div>
+                <label>Request details<textarea id="serviceNotes" maxlength="1000" rows="4" placeholder="Describe what you need. Never share passwords, OTPs, or login codes." required></textarea></label>
+                <label class="service-consent"><input id="serviceConsent" type="checkbox" required><span>I agree to share these details with OM STORE admin for this request. Contact details will be sent to Telegram only when Telegram is configured.</span></label>
+                <p class="service-form-status" id="serviceFormStatus" role="status" aria-live="polite"></p>
+                <button class="btn-primary" id="submitServiceRequest" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i>Send request</button>
+            </form>
+        </section>
+
+        <section class="service-status-panel" aria-labelledby="serviceStatusTitle">
+            <div><p class="section-kicker">TRACKING</p><h2 id="serviceStatusTitle">Check a service request</h2><p>Enter the request number from your submission confirmation.</p></div>
+            <form class="service-status-form" id="serviceStatusForm"><input id="serviceStatusId" maxlength="50" placeholder="Example: SV-..." aria-label="Service request number" required><button class="btn-outline" type="submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>Check status</button></form>
+            <div id="serviceStatusResult" class="service-status-result" role="status" aria-live="polite"></div>
+        </section>
+        <p class="services-disclaimer">Requests are reviewed by an admin. Contact Admin costs ₹10 and the phone number is shown only after the UPI payment is manually verified. No service is completed automatically.</p>
+    </main>
+    <footer class="page-footer">OM STORE service requests.</footer>
+</div>
+
+<script>
+(() => {
+    'use strict';
+    const UPI_ID = '0mmprakash01@fam';
+    const serviceInfo = {
+        source_file_bind: { title: 'Source file bind', description: 'Request account binding assistance.', amount: 1000 },
+        single_unsubscribe: { title: 'Single unsubscribe', description: 'Request one account unlink. Admin will confirm the price.', amount: null },
+        double_unsubscribe: { title: 'Double security / unsubscribe', description: 'Request double security assistance.', amount: 2000 },
+        sell_my_id: { title: 'Sell my ID', description: '₹100 seller service fee. Send your account details for an admin listing review.', amount: 100 },
+        security_service: { title: 'Find security service', description: 'Describe the account security help you need. Admin will confirm the price.', amount: null },
+        contact_admin: { title: 'Contact admin · ₹10', description: 'Submit your ₹10 UPI payment reference. Admin contact is revealed after payment verification.', amount: 10 }
+    };
+    const choices = document.querySelectorAll('[data-service]');
+    const panel = document.getElementById('serviceRequestPanel');
+    const paymentPanel = document.getElementById('servicePaymentPanel');
+    const utrField = document.getElementById('serviceUtrField');
+    const requestForm = document.getElementById('serviceRequestForm');
+    const formStatus = document.getElementById('serviceFormStatus');
+    const statusResult = document.getElementById('serviceStatusResult');
+    let qrInstance;
+    function showService(serviceKey) {
+        const service = serviceInfo[serviceKey];
+        if (!service) return;
+        document.getElementById('serviceKey').value = serviceKey;
+        document.getElementById('serviceRequestTitle').textContent = service.title;
+        document.getElementById('serviceDescription').textContent = service.description;
+        const isPaidService = Number.isFinite(service.amount) && service.amount > 0;
+        paymentPanel.hidden = !isPaidService;
+        utrField.hidden = !isPaidService;
+        document.getElementById('serviceUtr').required = isPaidService;
+        formStatus.textContent = '';
+        choices.forEach(choice => {
+            const selected = choice.dataset.service === serviceKey;
+            choice.classList.toggle('selected', selected);
+            choice.setAttribute('aria-pressed', String(selected));
+        });
+        panel.hidden = false;
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (isPaidService) {
+            const amount = Number(service.amount).toFixed(2);
+            document.getElementById('serviceFeeAmount').textContent = `₹${Number(service.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById('serviceFeeLabel').textContent = `${service.title} service fee`;
+            document.getElementById('serviceQrCaption').textContent = `Scan to pay ₹${Number(service.amount).toLocaleString('en-IN')}`;
+            const paymentUri = `upi://pay?${new URLSearchParams({ pa: UPI_ID, pn: 'OM STORE', am: amount, cu: 'INR', tn: `OM STORE ${service.title}` })}`;
+            const qr = document.getElementById('serviceQr');
+            qr.replaceChildren();
+            if (typeof QRCode === 'function') {
+                qrInstance = new QRCode(qr, { text: paymentUri, width: 180, height: 180, colorDark: '#101820', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            } else {
+                qr.textContent = 'QR unavailable. Use the UPI ID shown above and pay exactly ₹10.';
+                qr.classList.add('qr-fallback');
+            }
+        }
+    }
+
+    function appendStatusResult(request) {
+        statusResult.replaceChildren();
+        const summary = document.createElement('p');
+        const statusNames = { submitted: 'Submitted', payment_review: 'Payment review', verified: 'Verified', rejected: 'Rejected', accepted: 'Accepted', completed: 'Completed' };
+        summary.textContent = `${request.requestId} · ${request.serviceName} · ${statusNames[request.status] || request.status}`;
+        statusResult.append(summary);
+        const replies = {
+            submitted: 'Your request was sent to admin review. Admin will confirm the price if it was not listed.',
+            payment_review: 'Your UTR is waiting for manual UPI/bank verification.',
+            verified: 'Payment verified. Admin is processing your service request.',
+            accepted: 'Admin accepted your request and is working on it.',
+            completed: 'Your service request is complete.',
+            rejected: 'Your request or payment was not approved. Contact support with this reference.'
+        };
+        const reply = document.createElement('p');
+        reply.textContent = replies[request.status] || 'Admin has not updated this request yet.';
+        statusResult.append(reply);
+        if (request.serviceKey === 'contact_admin') {
+            const note = document.createElement('p');
+            if (request.status === 'verified' && request.adminContactNumber) {
+                note.textContent = 'Payment verified. Admin contact number:';
+                const link = document.createElement('a');
+                link.className = 'admin-contact-reveal';
+                link.href = `tel:${request.adminContactNumber.replace(/[^+\d]/g, '')}`;
+                link.textContent = request.adminContactNumber;
+                statusResult.append(note, link);
+            } else if (request.status === 'payment_review') {
+                note.textContent = 'Your ₹10 payment is awaiting manual verification. The admin number will appear here after approval.';
+                statusResult.append(note);
+            } else if (request.status === 'rejected') {
+                note.textContent = 'Payment was not verified. Check the UTR and contact store support.';
+                statusResult.append(note);
+            }
+        }
+    }
+
+    choices.forEach(choice => choice.addEventListener('click', () => showService(choice.dataset.service)));
+    document.getElementById('closeServiceForm').addEventListener('click', () => { panel.hidden = true; });
+    document.getElementById('copyServiceUpi').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(UPI_ID);
+            formStatus.textContent = 'UPI ID copied.';
+        } catch { formStatus.textContent = `UPI ID: ${UPI_ID}`; }
+    });
+    requestForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const submitButton = document.getElementById('submitServiceRequest');
+        const serviceKey = document.getElementById('serviceKey').value;
+        submitButton.disabled = true;
+        formStatus.textContent = 'Sending request…';
+        try {
+            const response = await fetch('/api/service-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serviceKey,
+                    buyer: {
+                        name: document.getElementById('serviceName').value.trim(),
+                        phone: document.getElementById('servicePhone').value.trim(),
+                        email: document.getElementById('serviceEmail').value.trim(),
+                        instagram: document.getElementById('serviceInstagram').value.trim().replace(/^@/, ''),
+                        gameUid: document.getElementById('serviceGameUid').value.trim(),
+                        notes: document.getElementById('serviceNotes').value.trim()
+                    },
+                    utr: serviceKey === 'contact_admin' ? document.getElementById('serviceUtr').value.trim().toUpperCase() : '',
+                    consent: document.getElementById('serviceConsent').checked
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not save this request.');
+            document.getElementById('serviceStatusId').value = result.requestId;
+            const telegramNote = result.telegramSent ? ' Admin notification sent.' : ' Request is saved in the portal; Telegram notification is not configured.';
+            formStatus.textContent = result.status === 'payment_review'
+                ? `Request ${result.requestId} is awaiting ${formatRupees(result.amount)} payment verification.${serviceKey === 'contact_admin' ? ' The admin number stays hidden until approved.' : ''}${telegramNote}`
+                : `Request ${result.requestId} was saved for admin review. The final price will be confirmed by admin if needed.${telegramNote}`;
+            requestForm.reset();
+        } catch (error) {
+            formStatus.textContent = error.message || 'Could not save this request.';
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+    document.getElementById('serviceStatusForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const requestId = document.getElementById('serviceStatusId').value.trim().toUpperCase();
+        statusResult.textContent = 'Checking request…';
+        try {
+            const response = await fetch(`/api/service-requests/${encodeURIComponent(requestId)}`);
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.message || 'Could not find this request.');
+            appendStatusResult(result);
+        } catch (error) {
+            statusResult.textContent = error.message || 'Could not check this request.';
+        }
+    });
+    const presetRequest = new URLSearchParams(window.location.search).get('request');
+    if (presetRequest) {
+        document.getElementById('serviceStatusId').value = presetRequest;
+        document.getElementById('serviceStatusForm').requestSubmit();
+    }
+})();
+</script>
+</body>
+</html>

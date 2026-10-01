@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Check an OM STORE order with the order status assistant.">
+    <title>Help Center | OM STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container">
+    <header class="main-header">
+        <a href="index.html" class="logo-area" aria-label="OM STORE home"><span class="logo-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span><span class="logo-text"><h1>OM STORE</h1><span>Free Fire ID marketplace</span></span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="index.html"><i class="fa-solid fa-store" aria-hidden="true"></i><span>Store</span></a>
+            <a href="about.html"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>About</span></a>
+            <a href="contact.html"><i class="fa-solid fa-envelope" aria-hidden="true"></i><span>Contact</span></a>
+            <a href="services.html"><i class="fa-solid fa-toolbox" aria-hidden="true"></i><span>Services</span></a>
+            <a href="help.html" class="active" aria-current="page"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Help</span></a>
+            <a href="login.html"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>Admin</span></a>
+        </nav>
+        <div class="header-actions"><div class="avatar-badge"><i class="fa-solid fa-circle-user" aria-hidden="true"></i><span>Guest</span></div></div>
+    </header>
+
+    <main class="help-center">
+        <div class="help-title-row"><h2>Order help center</h2><span class="assistant-badge"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>Order assistant</span></div>
+        <section class="assistant-panel" aria-label="Order status assistant">
+            <div class="assistant-topbar"><span class="assistant-avatar"><i class="fa-solid fa-headset" aria-hidden="true"></i></span><div><h3>OM Store support</h3><p>Order status lookup</p></div></div>
+            <div class="assistant-messages" id="assistantMessages" role="log" aria-live="polite">
+                <div class="chat-message assistant">Hi! I can automatically check your order or service status. Enter the OM- or SV- reference from your confirmation.</div>
+            </div>
+            <form class="assistant-form" id="orderLookupForm">
+                <input id="orderIdInput" name="orderId" maxlength="50" placeholder="OM-... or SV-..." aria-label="Order or service request number" required>
+                <button class="btn-primary" type="submit" aria-label="Check status"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i><span>Check</span></button>
+            </form>
+        </section>
+        <p class="assistant-hint">Enter an order or service reference. Replies come from the latest server status; admins manually verify all UPI payments.</p>
+    </main>
+    <footer class="page-footer">Automated status-based customer care. For other questions, visit the <a href="services.html">Services page</a> or <a href="contact.html">Contact page</a>.</footer>
+</div>
+
+<script>
+(() => {
+    'use strict';
+    const messages = document.getElementById('assistantMessages');
+    const input = document.getElementById('orderIdInput');
+    const orderStatuses = {
+        awaiting_payment: 'Awaiting payment. Complete the UPI payment, then submit your UTR on the checkout page.',
+        payment_review: 'Payment reference received. The store is reviewing the transfer.',
+        verified: 'Payment verified. The full account details will be sent within 1 hour. If they do not arrive, contact store support with your order number.',
+        rejected: 'Payment could not be verified. Check the UPI transaction and contact support with your order number.'
+    };
+    const serviceStatuses = {
+        submitted: 'Your request was sent to customer care. An admin will review it and confirm any unlisted price.',
+        payment_review: 'Your UTR was received. The payment is waiting for manual UPI/bank verification.',
+        verified: 'Payment verified. Customer care is processing your service request.',
+        accepted: 'An admin accepted your request and is working on it.',
+        completed: 'Your service request is complete.',
+        rejected: 'The request or payment was not approved. Contact customer care with this reference.'
+    };
+    function addMessage(text, role, status) {
+        const message = document.createElement('div');
+        message.className = `chat-message ${role}`;
+        message.textContent = text;
+        if (status) {
+            const badge = document.createElement('span');
+            badge.className = 'chat-status';
+            badge.textContent = status.replaceAll('_', ' ');
+            message.append(document.createElement('br'), badge);
+        }
+        messages.append(message);
+        messages.scrollTop = messages.scrollHeight;
+    }
+    async function lookupOrder(orderId) {
+        const normalizedId = orderId.trim().toUpperCase();
+        const isServiceRequest = /^SV-[A-Z0-9-]{8,45}$/.test(normalizedId);
+        const isStoreOrder = /^OM-[A-Z0-9-]{8,45}$/.test(normalizedId);
+        if (!isServiceRequest && !isStoreOrder) {
+            addMessage('That reference does not look right. Enter an OM- order number or SV- service request number.', 'assistant');
+            return;
+        }
+        addMessage(normalizedId, 'customer');
+        const waiting = document.createElement('div');
+        waiting.className = 'chat-message assistant';
+        waiting.textContent = 'Checking order status…';
+        messages.append(waiting);
+        messages.scrollTop = messages.scrollHeight;
+        try {
+            const endpoint = isServiceRequest ? '/api/service-requests/' : '/api/orders/';
+            const response = await fetch(`${endpoint}${encodeURIComponent(normalizedId)}`);
+            const result = await response.json().catch(() => ({}));
+            waiting.remove();
+            if (!response.ok) {
+                addMessage(result.message || 'I could not find that order. Check the order number and try again.', 'assistant');
+                return;
+            }
+            if (isServiceRequest) {
+                const fee = Number(result.amount) > 0 ? ` · ₹${Number(result.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '';
+                const explanation = serviceStatuses[result.status] || 'Customer care has not updated this request yet.';
+                const contact = result.adminContactNumber ? `\nAdmin contact: ${result.adminContactNumber}` : '';
+                addMessage(`${result.serviceName}${fee}\n${explanation}${contact}`, 'assistant', result.status);
+            } else {
+                const explanation = orderStatuses[result.status] || 'The store has not updated this order yet. Please contact support.';
+                addMessage(`${result.title} · ₹${Number(result.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}\n${explanation}`, 'assistant', result.status);
+            }
+        } catch {
+            waiting.remove();
+            addMessage('I could not reach the order service. Please try again in a moment.', 'assistant');
+        }
+    }
+    document.getElementById('orderLookupForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const orderId = input.value;
+        input.value = '';
+        lookupOrder(orderId);
+    });
+    const presetOrderId = new URLSearchParams(window.location.search).get('order');
+    if (presetOrderId) {
+        input.value = presetOrderId;
+        lookupOrder(presetOrderId);
+    }
+})();
+</script>
+</body>
+</html>
